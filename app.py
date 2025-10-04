@@ -1,63 +1,42 @@
-import os
-from flask import Flask, request, jsonify
-from flask_cors import CORS # <--- NUEVA IMPORTACIÓN
-from werkzeug.utils import secure_filename
-from audio_to_musicxml import generate_drum_score
-
-app = Flask(__name__)
-
-# Aplicar CORS a toda la aplicación
-CORS(app) # <--- NUEVA LÍNEA CLAVE PARA PERMITIR LA COMUNICACIÓN FRONTEND/BACKEND
-
-# Configuración: Permitir solo archivos MP3 y definir ruta temporal
-ALLOWED_EXTENSIONS = {'mp3'}
-UPLOAD_FOLDER = '/tmp/uploads'
-
-if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
-
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-
-def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+# --- EN EL ARCHIVO app.py ---
+# ... (todo el código anterior)
 
 @app.route('/convertir', methods=['POST'])
 def convertir():
-    # Verificar si el archivo está en la petición
     if 'mp3File' not in request.files:
-        return jsonify({'error': 'No se encontró el archivo MP3.'}), 400
+        return 'No se ha subido ningún archivo.', 400
 
-    file = request.files['mp3File']
+    archivo_mp3 = request.files['mp3File']
+    
+    # ----------------------------------------------------
+    # SOLUCIÓN: Usar un archivo temporal para el procesamiento de Librosa
+    # ----------------------------------------------------
+    try:
+        # 1. Creamos un archivo temporal para guardar el mp3
+        temp_file_path = f"/tmp/{archivo_mp3.filename}"
+        archivo_mp3.save(temp_file_path)
 
-    # Si el usuario no selecciona un archivo
-    if file.filename == '':
-        return jsonify({'error': 'No se seleccionó ningún archivo.'}), 400
-
-    if file and allowed_file(file.filename):
-        filename = secure_filename(file.filename)
-        temp_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        # 2. PROCESAMIENTO CON LIBROSA Y OTROS PASOS
         
-        # Guardar el archivo temporalmente
-        file.save(temp_path)
+        # Cargar el archivo de audio MP3 (librosa requiere el path en disco)
+        y, sr = librosa.load(temp_file_path, sr=None)
+        
+        # Aquí iría el código real de transcripción
+        # Por ahora, genera la partitura vacía para confirmar que funciona
+        xml_data = generate_drum_score() 
 
-        try:
-            # Llama a la función de generación de partitura (ahora con XML válido)
-            xml_content = generate_drum_score(temp_path)
+        # 3. Eliminar el archivo temporal
+        os.remove(temp_file_path)
+
+        return Response(xml_data, mimetype='application/xml')
+
+    except Exception as e:
+        # 4. En caso de error, asegurarse de que se elimine el archivo
+        if 'temp_file_path' in locals() and os.path.exists(temp_file_path):
+            os.remove(temp_file_path)
             
-            # Limpiar el archivo subido después de usarlo
-            os.remove(temp_path)
-            
-            # Devuelve el contenido XML como texto
-            return xml_content, 200, {'Content-Type': 'application/xml'}
+        # Devolvemos un error 500 para que el frontend lo muestre
+        print(f"Error durante el procesamiento del archivo: {e}")
+        return f"Error durante el procesamiento del archivo: {e}", 500
 
-        except Exception as e:
-            # Manejo de errores durante la conversión
-            if os.path.exists(temp_path):
-                os.remove(temp_path)
-            return jsonify({'error': f'Error durante el procesamiento del archivo: {str(e)}'}), 500
-
-    return jsonify({'error': 'Tipo de archivo no permitido.'}), 400
-
-if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=os.environ.get('PORT', 5000))
+# ... (todo el código de generate_drum_score sigue igual)
