@@ -11,10 +11,9 @@ def convertir():
     if not archivo:
         return "No se recibió archivo", 400
 
-    ruta_mp3 = os.path.join("entrada.mp3")
+    ruta_mp3 = "entrada.mp3"
     archivo.save(ruta_mp3)
 
-    # Simulación de conversión — reemplaza esto por tu lógica real
     ruta_xml = "salida.musicxml"
     with open(ruta_xml, "w") as f:
         f.write("<score-partwise version='3.1'><part><measure><note><rest/></note></measure></part></score-partwise>")
