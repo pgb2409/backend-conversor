@@ -1,13 +1,17 @@
 import os
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, jsonify
+from flask_cors import CORS # <--- NUEVA IMPORTACIÓN
 from werkzeug.utils import secure_filename
-from audio_to_musicxml import generate_drum_score # Importa la función que acabas de pegar
+from audio_to_musicxml import generate_drum_score
 
 app = Flask(__name__)
 
+# Aplicar CORS a toda la aplicación
+CORS(app) # <--- NUEVA LÍNEA CLAVE PARA PERMITIR LA COMUNICACIÓN FRONTEND/BACKEND
+
 # Configuración: Permitir solo archivos MP3 y definir ruta temporal
 ALLOWED_EXTENSIONS = {'mp3'}
-UPLOAD_FOLDER = '/tmp/uploads' # Usar /tmp en Render para archivos temporales
+UPLOAD_FOLDER = '/tmp/uploads'
 
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
@@ -55,6 +59,5 @@ def convertir():
 
     return jsonify({'error': 'Tipo de archivo no permitido.'}), 400
 
-# El servidor debe escuchar en todos los interfaces si usas Gunicorn/Render
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=os.environ.get('PORT', 5000))
