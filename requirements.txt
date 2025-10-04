@@ -1,3 +1,12 @@
 Flask
-flask-cors
 gunicorn
+# Librerías clave para el análisis de audio y MusicXML
+librosa
+numpy
+scipy
+# Madmom es excelente para percusión, pero tiene dependencias complejas. 
+# Si el despliegue falla, intenta primero con solo librosa/numpy.
+# Si Madmom funciona en tu entorno local, agrégalo aquí:
+# madmom
+# lxml (Necesaria para manejar y generar XML de forma robusta)
+lxml
