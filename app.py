@@ -1,6 +1,5 @@
 from flask import Flask, request, send_file
 from flask_cors import CORS
-from audio_to_musicxml import convertir_mp3_a_musicxml
 import os
 
 app = Flask(__name__)
@@ -12,8 +11,12 @@ def convertir():
     if not archivo:
         return "No se recibió archivo", 400
 
-    ruta_mp3 = os.path.join("uploads", "entrada.mp3")
+    ruta_mp3 = os.path.join("entrada.mp3")
     archivo.save(ruta_mp3)
 
-    ruta_xml = convertir_mp3_a_musicxml(ruta_mp3)
+    # Simulación de conversión — reemplaza esto por tu lógica real
+    ruta_xml = "salida.musicxml"
+    with open(ruta_xml, "w") as f:
+        f.write("<score-partwise version='3.1'><part><measure><note><rest/></note></measure></part></score-partwise>")
+
     return send_file(ruta_xml, mimetype="application/vnd.recordare.musicxml+xml")
