@@ -1,5 +1,2 @@
 flask
-librosa
-music21
-numpy
-soundfile
+flask-cors
