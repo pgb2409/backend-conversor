@@ -1,32 +1,22 @@
 from flask import Flask, request, send_file
+from flask_cors import CORS
 import os
-import subprocess
 
 app = Flask(__name__)
-UPLOAD_FOLDER = 'uploads'
-OUTPUT_FOLDER = 'outputs'
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-os.makedirs(OUTPUT_FOLDER, exist_ok=True)
+CORS(app)
 
 @app.route('/convert', methods=['POST'])
-def convert_audio():
-    if 'file' not in request.files:
-        return 'No file uploaded', 400
-
+def convert():
     file = request.files['file']
     filename = file.filename
-    input_path = os.path.join(UPLOAD_FOLDER, filename)
-    output_name = filename.rsplit('.', 1)[0] + '.musicxml'
-    output_path = os.path.join(OUTPUT_FOLDER, output_name)
+    file.save(filename)
 
-    file.save(input_path)
+    # Simulación de conversión
+    output_file = "resultado.musicxml"
+    with open(output_file, "w") as f:
+        f.write("<score-partwise version='3.1'><part><measure><note><unpitched/></note></measure></part></score-partwise>")
 
-    subprocess.run(['python', 'audio_to_musicxml.py', input_path])
-
-    if not os.path.exists(output_path):
-        return 'Conversion failed', 500
-
-    return send_file(output_path, as_attachment=True)
+    return send_file(output_file, as_attachment=True)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=10000)
